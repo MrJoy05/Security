@@ -1,0 +1,9 @@
+1.Crear carpeta sever 
+2.Inicializar proyecto : npm int
+3.Agregar carpeta
+    -nodels
+    -views
+    -public
+4. Agregar archivos
+    -app.js
+    
