@@ -6,7 +6,7 @@ const session = require('express-session');
 const { error } = require('console');
 const path = require('path');
 const mongosse = require('mongoose');
-const bycrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 class Server {
     constructor() {
@@ -18,7 +18,7 @@ class Server {
 
     conectMongo(){
         mongosse.connect('mongodb://localhost:27017/Usuarios2025',)
-        let = Shema = mongosse.Schema;
+        let Shema = mongose.Schema;
         const userShema = new Shema({
             user: String,
             pass: String,
@@ -78,8 +78,8 @@ class Server {
             let User = req.body.username;
             let Password = req.body.password;
             //Cifrar la contraseña
-            let salt = bycrypt.genSaltSync(12);
-            let hashCont = bycrypt.hashSync(Password, salt);
+            let salt = bcrypt.genSaltSync(12);
+            let hashCont = bcrypt.hashSync(Password, salt);
             console.log(hashCont);        
             // Buscar el usuario en la base de datos
             let consulta = await this.userModel.find({ usuario: User });
