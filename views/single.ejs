@@ -72,9 +72,16 @@
 					</div>
 					<div class="col-xs-10 text-right menu-1">
 						<ul>
+							<!-- Botón de Cerrar Sesión -->
+						<% if (nombre) { %>
+   						 <form action="/logout" method="get">
+       					 <button type="submit">Cerrar sesión</button>
+    					</form>
+						<% } %>
+
 							<li><a href="index">Portfolio</a></li>
 							<li class="active"><a href="single">Single</a></li>
-							<li class="has-dropdown"><a href="#">Dropdown</a>
+							<li class="has-dropdown"><a href="Register.html">Register</a>
 								<ul class="dropdown">
 									<li><a href="#">Infrastructure</a></li>
 									<li><a href="#">Residential</a></li>
