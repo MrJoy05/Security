@@ -13,31 +13,35 @@ class Server {
     constructor() {
         this.app = express();
         this.port = process.env.PORT || 5000;  
-        this.conectMongo();  // Conectar a MongoDB
+        this.conectMongo();  
         this.middlewares();
         this.routes();
         this.listen();
 
-        // ✅ Corrección del logger
         this.logger = createLogger({
             format: format.combine(
                 format.timestamp(),
                 format.json()
             ),
             transports: [
-                new transports.File({ filename: 'registro.log' }) // Guarda logs en un archivo
+                new transports.File({ filename: 'registro.log' }) // Log de eventos
             ]
         });
     }
-
 
     conectMongo() {
         mongoose.connect('mongodb://localhost:27017/Usuarios2025', { 
             useNewUrlParser: true, 
             useUnifiedTopology: true 
         })
-        .then(() => console.log("Conectado a MongoDB"))
-        .catch(err => console.error("Error al conectar a MongoDB:", err));
+        .then(() => {
+            console.log("Conectado a MongoDB");
+            this.logger.info({ message: "Conectado a MongoDB" });
+        })
+        .catch(err => {
+            console.error("Error al conectar a MongoDB:", err);
+            this.logger.error({ message: "Error al conectar a MongoDB", error: err.toString() });
+        });
 
         let Schema = mongoose.Schema;
         const userSchema = new Schema({
@@ -66,11 +70,16 @@ class Server {
     }
 
     routes() {
+        this.app.use((req, res, next) => {
+            this.logger.info({ message: `Solicitud recibida: ${req.method} ${req.url}` });
+            next();
+        });
+
         this.app.post('/registrar', async (req, res) => {
             let usuario = req.body.usuario;
             let cont = req.body.cont;
         
-            console.log("Datos recibidos:", usuario, cont); // Verificar datos
+            console.log("Datos recibidos:", usuario, cont); 
         
             if (!usuario || !cont) {
                 return res.status(400).send("Faltan datos en el formulario.");
@@ -90,15 +99,16 @@ class Server {
                 res.redirect('/login.html');  
             } catch (error) {
                 console.error('Error al registrar usuario:', error);
+                this.logger.error({ message: "Error al registrar usuario", error: error.toString() });
                 res.status(500).send('Error al registrar usuario.');
             }
         });       
-
 
         this.app.get('/index', (req, res) => {
             if (req.session.user) {
                 res.render('index', { nombre: req.session.user });
             } else {
+                this.logger.warn({ message: "Acceso denegado - usuario no autenticado" });
                 res.status(401).render('error', { mensaje: 'Acceso denegado. Inicia sesión.' });
             }
         });
@@ -123,24 +133,15 @@ class Server {
             
                     res.render('index', { nombre: User });                  
                 } else {
-                    this.logger.error({
-                        message: `Error de login para usuario: ${User}`,
-                        name: 'login_error',
-                        stack: 'ruta login'
+                    this.logger.warn({
+                        message: `Intento de login fallido: ${User} (Contraseña incorrecta)`
                     });
-            
                     res.status(401).render('error', { mensaje: 'Contraseña incorrecta.' });
                 }
             } else {
-                this.logger.error({
-                    message: `Intento de login fallido - usuario no encontrado: ${User}`,
-                    name: 'login_error',
-                    stack: 'ruta login'
-                });
-            
+                this.logger.warn({ message: `Intento de login con usuario no registrado: ${User}` });
                 res.status(404).render('error', { mensaje: 'Usuario no encontrado.' });
             }
-            
         });
     }
 
@@ -150,6 +151,7 @@ class Server {
             key: fs.readFileSync('private.key')
         }, this.app).listen(this.port, () => {
             console.log('Servidor corriendo en https://127.0.0.1:' + this.port);
+            this.logger.info({ message: `Servidor iniciado en puerto ${this.port}` });
         });
     }
 }
